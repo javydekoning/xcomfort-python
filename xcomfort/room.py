@@ -1,27 +1,39 @@
-import rx
+"""Room module for xComfort integration."""
 from enum import Enum
+
+import rx
+
 from .constants import Messages
 
 
 class RctMode(Enum):
+    """RCT mode enumeration."""
+
     Cool = 1
     Eco = 2
     Comfort = 3
 
 
 class RctState(Enum):
+    """RCT state enumeration."""
+
     Idle = 0
     Auto = 1
     Active = 2
 
 
 class RctModeRange:
-    def __init__(self, min: float, max: float):  # noqa: A002
-        self.Min = min
-        self.Max = max
+    """RCT mode range class."""
+
+    def __init__(self, min_val: float, max_val: float):
+        """Initialize RCT mode range."""
+        self.Min = min_val
+        self.Max = max_val
 
 
 class RoomState:
+    """Room state class."""
+
     def __init__(
         self,
         setpoint,
@@ -32,6 +44,7 @@ class RoomState:
         state: RctState,
         raw,
     ):
+        """Initialize room state."""
         self.setpoint = setpoint
         self.temperature = temperature
         self.humidity = humidity
@@ -41,6 +54,7 @@ class RoomState:
         self.rctstate = state
 
     def __str__(self):
+        """String representation of room state."""
         return (
             f"RoomState({self.setpoint}, {self.temperature}, {self.humidity},{self.mode},{self.rctstate} {self.power})"
         )
@@ -49,14 +63,18 @@ class RoomState:
 
 
 class Room:
+    """Room class for xComfort integration."""
+
     def __init__(self, bridge, room_id, name: str):
+        """Initialize room."""
         self.bridge = bridge
         self.room_id = room_id
         self.name = name
         self.state = rx.subject.BehaviorSubject(None)
-        self.modesetpoints = dict()
+        self.modesetpoints = {}
 
     def handle_state(self, payload):
+        """Handle room state updates."""
         old_state = self.state.value
 
         if old_state is not None:
@@ -85,15 +103,13 @@ class Room:
         self.state.on_next(RoomState(setpoint, temperature, humidity, power, mode, currentstate, payload))
 
     async def set_target_temperature(self, setpoint: float):
+        """Set target temperature for room."""
         # Validate that new setpoint is within allowed ranges.
         # if above/below allowed values, set to the edge value
         setpointrange = self.bridge.rctsetpointallowedvalues[RctMode(self.state.value.mode)]
 
-        if setpointrange.Max < setpoint:
-            setpoint = setpointrange.Max
-
-        if setpoint < setpointrange.Min:
-            setpoint = setpointrange.Min
+        setpoint = min(setpoint, setpointrange.Max)
+        setpoint = max(setpoint, setpointrange.Min)
 
         # Store new setpoint for current mode
         self.modesetpoints[self.state.value.mode.value] = setpoint
@@ -110,6 +126,7 @@ class Room:
         )
 
     async def set_mode(self, mode: RctMode):
+        """Set room mode."""
         # Find setpoint for the mode we are about to set, and use that
         # When transmitting heating_state message.
         newsetpoint = self.modesetpoints.get(mode)
@@ -125,6 +142,7 @@ class Room:
         )
 
     def __str__(self):
+        """String representation of room."""
         return f'Room({self.room_id}, "{self.name}")'
 
     __repr__ = __str__

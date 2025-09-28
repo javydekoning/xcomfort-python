@@ -1,10 +1,10 @@
+"""Bridge module for xComfort integration."""
 import asyncio
 from enum import Enum
-from typing import Optional
 
 import aiohttp
 
-from .comp import Comp, CompState  # noqa
+from .comp import Comp, CompState  # noqa: F401
 from .connection import SecureBridgeConnection, setup_secure_connection
 from .constants import ComponentTypes, DeviceTypes, Messages
 from .devices import (
@@ -19,10 +19,12 @@ from .devices import (
 )
 
 # Some HA code relies on bridge having imported these:
-from .room import RctMode, RctModeRange, RctState, Room, RoomState  # noqa
+from .room import RctMode, RctModeRange, RctState, Room, RoomState  # noqa: F401
 
 
 class State(Enum):
+    """Bridge state enumeration."""
+
     Uninitialized = 0
     Initializing = 1
     Ready = 2
@@ -30,7 +32,10 @@ class State(Enum):
 
 
 class Bridge:
+    """Main bridge class for xComfort communication."""
+
     def __init__(self, ip_address: str, authkey: str, session=None):
+        """Initialize bridge with IP address and auth key."""
         self.ip_address = ip_address
         self.authkey = authkey
 
@@ -44,13 +49,11 @@ class Bridge:
         self._closeSession = closeSession
 
         # Values determined from using setpoint slider in app.
-        self.rctsetpointallowedvalues = dict(
-            {
-                RctMode.Cool: RctModeRange(5.0, 20.0),
-                RctMode.Eco: RctModeRange(10.0, 30.0),
-                RctMode.Comfort: RctModeRange(18.0, 40.0),
-            }
-        )
+        self.rctsetpointallowedvalues = {
+            RctMode.Cool: RctModeRange(5.0, 20.0),
+            RctMode.Eco: RctModeRange(10.0, 30.0),
+            RctMode.Comfort: RctModeRange(18.0, 40.0),
+        }
         self._comps = {}
         self._devices = {}
         self._rooms = {}
@@ -61,8 +64,9 @@ class Bridge:
         self.logger = lambda x: None
 
     async def run(self):
+        """Run the bridge main loop."""
         if self.state != State.Uninitialized:
-            raise Exception("Run can only be called once at a time")
+            raise RuntimeError("Run can only be called once at a time")
 
         self.state = State.Initializing
 
@@ -72,8 +76,8 @@ class Bridge:
                 await self._connect()
                 await self.connection.pump()
 
-            except Exception as e:
-                self.logger(f"Error: {repr(e)}")
+            except (ConnectionError, RuntimeError) as e:
+                self.logger(f"Error: {e!r}")
                 await asyncio.sleep(5)
 
             if self.connection_subscription is not None:
@@ -82,28 +86,35 @@ class Bridge:
         self.state = State.Uninitialized
 
     async def switch_device(self, device_id, message):
+        """Switch a device on/off."""
         payload = {"deviceId": device_id}
         payload.update(message)
         await self.send_message(Messages.ACTION_SWITCH_DEVICE, payload)
 
     async def slide_device(self, device_id, message):
+        """Slide a device (dimmer/shade)."""
         payload = {"deviceId": device_id}
         payload.update(message)
         await self.send_message(Messages.ACTION_SLIDE_DEVICE, payload)
 
     async def send_message(self, message_type: Messages, message):
+        """Send a message to the bridge."""
         await self.connection.send_message(message_type, message)
 
     def _add_comp(self, comp):
+        """Add a component to the bridge."""
         self._comps[comp.comp_id] = comp
 
     def _add_device(self, device):
+        """Add a device to the bridge."""
         self._devices[device.device_id] = device
 
     def _add_room(self, room):
+        """Add a room to the bridge."""
         self._rooms[room.room_id] = room
 
     def _handle_SET_DEVICE_STATE(self, payload):
+        """Handle device state updates."""
         try:
             device = self._devices[payload["deviceId"]]
 
@@ -112,6 +123,7 @@ class Bridge:
             return
 
     def _handle_SET_STATE_INFO(self, payload):
+        """Handle state info updates."""
         for item in payload["item"]:
             if "deviceId" in item:
                 deviceId = item["deviceId"]
@@ -132,6 +144,7 @@ class Bridge:
                 self.logger(f"Unknown state info: {payload}")
 
     def _create_comp_from_payload(self, payload):
+        """Create a component from payload data."""
         comp_id = payload["compId"]
         name = payload["name"]
         comp_type = payload["compType"]
@@ -139,6 +152,7 @@ class Bridge:
         return Comp(self, comp_id, comp_type, name, payload)
 
     def _create_device_from_payload(self, payload):
+        """Create a device from payload data."""
         device_id = payload["deviceId"]
         name = payload["name"]
         dev_type = payload["devType"]
@@ -160,7 +174,7 @@ class Bridge:
             return RcTouch(self, device_id, name, comp_id)
 
         elif dev_type == DeviceTypes.SWITCH:
-            component: Optional[Comp] = self._comps.get(comp_id)
+            component: Comp | None = self._comps.get(comp_id)
             if component and component.comp_type == ComponentTypes.DOOR_WINDOW_SENSOR:
                 if component.payload.get("mode") == "1310":
                     return DoorSensor(self, device_id, name, comp_id, payload)
@@ -174,12 +188,14 @@ class Bridge:
         return BridgeDevice(self, device_id, name)
 
     def _create_room_from_payload(self, payload):
+        """Create a room from payload data."""
         room_id = payload["roomId"]
         name = payload["name"]
 
         return Room(self, room_id, name)
 
     def _handle_comp_payload(self, payload):
+        """Handle component payload."""
         comp_id = payload["compId"]
 
         comp = self._comps.get(comp_id)
@@ -195,6 +211,7 @@ class Bridge:
         comp.handle_state(payload)
 
     def _handle_device_payload(self, payload):
+        """Handle device payload."""
         device_id = payload["deviceId"]
 
         device = self._devices.get(device_id)
@@ -210,6 +227,7 @@ class Bridge:
         device.handle_state(payload)
 
     def _handle_room_payload(self, payload):
+        """Handle room payload."""
         room_id = payload["roomId"]
 
         room = self._rooms.get(room_id)
@@ -225,6 +243,7 @@ class Bridge:
         room.handle_state(payload)
 
     def _handle_SET_ALL_DATA(self, payload):
+        """Handle initial data setup."""
         if "lastItem" in payload:
             self.state = State.Ready
             self.on_initialized.set()
@@ -233,35 +252,36 @@ class Bridge:
             for device_payload in payload["devices"]:
                 try:
                     self._handle_device_payload(device_payload)
-                except Exception as e:
-                    self.logger(f"Failed to handle device payload: {str(e)}")
+                except (KeyError, ValueError) as e:
+                    self.logger(f"Failed to handle device payload: {e!s}")
 
         if "comps" in payload:
             for comp_payload in payload["comps"]:
                 try:
                     self._handle_comp_payload(comp_payload)
-                except Exception as e:
-                    self.logger(f"Failed to handle comp payload: {str(e)}")
+                except (KeyError, ValueError) as e:
+                    self.logger(f"Failed to handle comp payload: {e!s}")
 
         if "rooms" in payload:
             for room_payload in payload["rooms"]:
                 try:
                     self._handle_room_payload(room_payload)
-                except Exception as e:
-                    self.logger(f"Failed to handle room payload: {str(e)}")
+                except (KeyError, ValueError) as e:
+                    self.logger(f"Failed to handle room payload: {e!s}")
 
         if "roomHeating" in payload:
             for room_payload in payload["roomHeating"]:
                 try:
                     self._handle_room_payload(room_payload)
-                except Exception as e:
-                    self.logger(f"Failed to handle room payload: {str(e)}")
+                except (KeyError, ValueError) as e:
+                    self.logger(f"Failed to handle room payload: {e!s}")
 
     def _handle_UNKNOWN(self, message_type, payload):
+        """Handle unknown message types."""
         self.logger(f"Unhandled package [{message_type.name}]: {payload}")
-        pass
 
     def _onMessage(self, message):
+        """Handle incoming messages."""
         if "payload" in message:
             message_type = Messages(message["type_int"])
             method_name = "_handle_" + message_type.name
@@ -269,16 +289,18 @@ class Bridge:
             method = getattr(self, method_name, lambda p: self._handle_UNKNOWN(message_type, p))
             try:
                 method(message["payload"])
-            except Exception as e:
-                self.logger(f"Unknown error with: {method_name}: {str(e)}")
+            except (KeyError, ValueError) as e:
+                self.logger(f"Unknown error with: {method_name}: {e!s}")
         else:
             self.logger(f"Not known: {message}")
 
     async def _connect(self):
+        """Establish connection to bridge."""
         self.connection = await setup_secure_connection(self._session, self.ip_address, self.authkey)
         self.connection_subscription = self.connection.messages.subscribe(self._onMessage)
 
     async def close(self):
+        """Close the bridge connection."""
         self.state = State.Closing
         self.on_initialized.clear()
 
@@ -290,19 +312,23 @@ class Bridge:
             await self._session.close()
 
     async def wait_for_initialization(self):
+        """Wait for bridge initialization to complete."""
         return await self.on_initialized.wait()
 
     async def get_comps(self):
+        """Get all components."""
         await self.wait_for_initialization()
 
         return self._comps
 
     async def get_devices(self):
+        """Get all devices."""
         await self.wait_for_initialization()
 
         return self._devices
 
     async def get_rooms(self):
+        """Get all rooms."""
         await self.wait_for_initialization()
 
         return self._rooms

@@ -1,0 +1,19 @@
+name: RuffLinter
+
+on:
+  push:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: dl-hass-pyproject
+        run: |
+          curl -L -o ./.github/linters/pyproject.toml https://raw.githubusercontent.com/home-assistant/core/refs/heads/dev/pyproject.toml
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "check --config .github/linters/.ruff.toml"

@@ -1,7 +1,21 @@
 # xcomfort-python
+
 Unofficial python package for communicating with Eaton xComfort Bridge
 
+## Installation
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. You can install it using:
+
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install the package in development mode
+uv pip install -e .
+```
+
 ## Usage
+
 ```python
 import asyncio
 from xcomfort import Bridge
@@ -35,7 +49,31 @@ asyncio.run(main())
 
 ```
 
-## Tests
-```python
-python -m pytest
+## Development
+
+### Running Tests
+
+You can run the tests using uvx without any local dependency management:
+
+```bash
+# Run tests with uvx (no local installation needed)
+uvx --with aiohttp --with rx --with pycryptodome --with pytest-asyncio pytest tests/ -v
+
+# Or use the convenience script
+./run_tests.sh
+
+# Or install dev dependencies and run tests locally
+uv pip install -e ".[dev]"
+pytest
 ```
+
+### Dependencies
+
+The project includes the following dependencies:
+- `aiohttp` - For async HTTP client functionality
+- `rx` - For reactive programming
+- `pycryptodome` - For cryptographic operations
+
+## To run Github workflows locally
+
+Install [act](https://nektosact.com/installation/index.html) and run flows locally using `act`. 

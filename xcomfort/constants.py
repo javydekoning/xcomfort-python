@@ -1,7 +1,10 @@
+"""Constants module for xComfort integration."""
 from enum import IntEnum
 
 
 class Messages(IntEnum):
+    """Message types for xComfort communication."""
+
     NACK = 0
     ACK = 1
     HEARTBEAT = 2
@@ -102,6 +105,8 @@ class Messages(IntEnum):
 
 
 class ShadeOperationState(IntEnum):
+    """Shade operation states."""
+
     OPEN = 0
     CLOSE = 1
     STOP = 2
@@ -115,6 +120,8 @@ class ShadeOperationState(IntEnum):
 
 
 class DeviceTypes(IntEnum):
+    """Device types for xComfort devices."""
+
     ACTUATOR_SWITCH = 100
     ACTUATOR_DIMM = 101
     SHADING_ACTUATOR = 102
@@ -131,6 +138,8 @@ class DeviceTypes(IntEnum):
 
 
 class HeatingTypes(IntEnum):
+    """Heating types for xComfort devices."""
+
     ELECTRIC_FLOOR_FOIL = 1
     ELECTRIC_FLOOR_CABLE = 2
     WATER_FLOOR = 3
@@ -140,6 +149,8 @@ class HeatingTypes(IntEnum):
 
 
 class ComponentTypes(IntEnum):
+    """Component types for xComfort devices."""
+
     PUSH_BUTTON_1 = 1
     PUSH_BUTTON_2 = 2
     MULTI_HEATING_ACTUATOR = 71

@@ -1,7 +1,9 @@
+"""Test module for RcTouch device."""
 from xcomfort.devices import RcTouch
 
 
 def test_rctouchstate():
+    """Test RcTouch state handling."""
     payload = {
         "deviceId": 17,
         "info": [
