@@ -1,8 +1,12 @@
 """Devices module for xComfort integration."""
 
+import logging
+
 import rx
 
 from .constants import Messages, ShadeOperationState
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DeviceState:
@@ -140,16 +144,18 @@ class Light(BridgeDevice):
         """Handle light state updates."""
         switch = payload["switch"]
         dimmvalue = self.interpret_dimmvalue_from_payload(switch, payload)
-
+        _LOGGER.debug("Light %s state update: switch=%s, dimmvalue=%s", self.name, switch, dimmvalue)
         self.state.on_next(LightState(switch, dimmvalue, payload))
 
     async def switch(self, switch: bool):
         """Switch light on/off."""
+        _LOGGER.debug("Switching light %s: %s", self.name, "ON" if switch else "OFF")
         await self.bridge.switch_device(self.device_id, {"switch": switch})
 
     async def dimm(self, value: int):
         """Set dimming value."""
         value = max(0, min(99, value))
+        _LOGGER.debug("Setting light %s dim value to %s", self.name, value)
         await self.bridge.slide_device(self.device_id, {"dimmvalue": value})
 
     def __str__(self):
@@ -180,6 +186,8 @@ class RcTouch(BridgeDevice):
                     humidity = float(info["value"])
 
         if temperature is not None and humidity is not None:
+            _LOGGER.debug("RcTouch %s state update: temp=%s°C, humidity=%s%%",
+                         self.name, temperature, humidity)
             self.state.on_next(RcTouchState(temperature, humidity, payload))
 
 
@@ -221,6 +229,9 @@ class Shade(BridgeDevice):
     def handle_state(self, payload):
         """Handle shade state updates."""
         self.__shade_state.update_from_partial_state_update(payload)
+        _LOGGER.debug("Shade %s state update: position=%s, current_state=%s, safety=%s",
+                     self.name, self.__shade_state.position,
+                     self.__shade_state.current_state, self.__shade_state.is_safety_enabled)
         self.state.on_next(self.__shade_state)
 
     async def send_state(self, state, **kw):
@@ -228,8 +239,10 @@ class Shade(BridgeDevice):
         if self.__shade_state.is_safety_enabled:
             # Do not trigger changes if safety is on. The official xcomfort client does
             # this check in the client, so we do that too just to be safe.
+            _LOGGER.warning("Shade %s: Cannot send state, safety is enabled", self.name)
             return
 
+        _LOGGER.debug("Shade %s: Sending state %s with args %s", self.name, state, kw)
         await self.bridge.send_message(
             Messages.SET_DEVICE_SHADING_STATE,
             {"deviceId": self.device_id, "state": state, **kw},
@@ -237,22 +250,27 @@ class Shade(BridgeDevice):
 
     async def move_down(self):
         """Move shade down."""
+        _LOGGER.debug("Shade %s: Moving down", self.name)
         await self.send_state(ShadeOperationState.CLOSE)
 
     async def move_up(self):
         """Move shade up."""
+        _LOGGER.debug("Shade %s: Moving up", self.name)
         await self.send_state(ShadeOperationState.OPEN)
 
     async def move_stop(self):
         """Stop shade movement."""
         if self.__shade_state.is_safety_enabled:
+            _LOGGER.warning("Shade %s: Cannot stop, safety is enabled", self.name)
             return
 
+        _LOGGER.debug("Shade %s: Stopping", self.name)
         await self.send_state(ShadeOperationState.STOP)
 
     async def move_to_position(self, position: int):
         """Move shade to specific position."""
         assert self.supports_go_to and 0 <= position <= 100
+        _LOGGER.debug("Shade %s: Moving to position %s", self.name, position)
         await self.send_state(ShadeOperationState.GO_TO, value=position)
 
     def __str__(self) -> str:
@@ -277,6 +295,8 @@ class DoorWindowSensor(BridgeDevice):
         if (state := payload.get("curstate")) is not None:
             self.is_closed = state == 1
             self.is_open = not self.is_closed
+            _LOGGER.debug("Door/Window sensor %s state update: %s",
+                         self.name, "CLOSED" if self.is_closed else "OPEN")
 
         self.state.on_next(self.is_closed)
 
@@ -318,6 +338,7 @@ class Rocker(BridgeDevice):
         """Handle rocker state updates."""
         self.payload.update(payload)
         self.is_on = bool(payload["curstate"])
+        _LOGGER.debug("Rocker %s state update: %s", self.name, "ON" if self.is_on else "OFF")
         if broadcast:
             self.state.on_next(self.is_on)
 

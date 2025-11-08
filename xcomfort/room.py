@@ -1,9 +1,12 @@
 """Room module for xComfort integration."""
 from enum import Enum
+import logging
 
 import rx
 
 from .constants import Messages
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RctMode(Enum):
@@ -94,11 +97,16 @@ class Room:
         # When handling from _SET_ALL_DATA, we get the setpoints for each mode/preset
         # Store these for later use
         if "modes" in payload:
-            for mode in payload["modes"]:
-                self.modesetpoints[RctMode(mode["mode"])] = float(mode["value"])
+            for mode_data in payload["modes"]:
+                self.modesetpoints[RctMode(mode_data["mode"])] = float(mode_data["value"])
+            _LOGGER.debug("Room %s: Loaded mode setpoints: %s", self.name, self.modesetpoints)
 
         if "state" in payload:
             currentstate = RctState(payload.get("state", None))
+
+        _LOGGER.debug("Room %s state update: temp=%s°C, setpoint=%s°C, humidity=%s%%, mode=%s, state=%s, power=%s",
+                     self.name, temperature, setpoint, humidity, mode.name if mode else None,
+                     currentstate.name if currentstate else None, power)
 
         self.state.on_next(RoomState(setpoint, temperature, humidity, power, mode, currentstate, payload))
 
@@ -108,8 +116,16 @@ class Room:
         # if above/below allowed values, set to the edge value
         setpointrange = self.bridge.rctsetpointallowedvalues[RctMode(self.state.value.mode)]
 
+        original_setpoint = setpoint
         setpoint = min(setpoint, setpointrange.Max)
         setpoint = max(setpoint, setpointrange.Min)
+
+        if original_setpoint != setpoint:
+            _LOGGER.warning("Room %s: Requested setpoint %s°C adjusted to %s°C (range: %s-%s°C)",
+                          self.name, original_setpoint, setpoint, setpointrange.Min, setpointrange.Max)
+
+        _LOGGER.debug("Room %s: Setting target temperature to %s°C (mode: %s)",
+                     self.name, setpoint, self.state.value.mode.name)
 
         # Store new setpoint for current mode
         self.modesetpoints[self.state.value.mode.value] = setpoint
@@ -130,6 +146,9 @@ class Room:
         # Find setpoint for the mode we are about to set, and use that
         # When transmitting heating_state message.
         newsetpoint = self.modesetpoints.get(mode)
+        _LOGGER.debug("Room %s: Setting mode to %s (setpoint: %s°C)",
+                     self.name, mode.name, newsetpoint)
+
         await self.bridge.send_message(
             Messages.SET_HEATING_STATE,
             {
