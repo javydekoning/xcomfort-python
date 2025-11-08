@@ -162,3 +162,10 @@ class ComponentTypes(IntEnum):
     WATER_GUARD = 84
     WATER_SENSOR = 85
     SHADING_ACTUATOR = 86
+
+
+# Firmware build version mappings
+FW_BUILDS = {
+    66: "4.0.1",
+}
+
