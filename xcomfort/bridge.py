@@ -1,4 +1,5 @@
 """Bridge module for xComfort integration."""
+
 import asyncio
 from enum import Enum
 import logging
@@ -152,21 +153,30 @@ class Bridge:
         for item in payload["item"]:
             if "deviceId" in item:
                 deviceId = item["deviceId"]
-                device = self._devices[deviceId]
-                _LOGGER.debug("State update for device %s: %s", device.name, item)
-                device.handle_state(item)
+                device = self._devices.get(deviceId)
+                if device:
+                    _LOGGER.debug("State update for device %s: %s", device.name, item)
+                    device.handle_state(item)
+                else:
+                    _LOGGER.warning("Received state update for unknown device %s: %s", deviceId, item)
 
             elif "roomId" in item:
                 roomId = item["roomId"]
-                room = self._rooms[roomId]
-                _LOGGER.debug("State update for room %s: %s", room.name, item)
-                room.handle_state(item)
+                room = self._rooms.get(roomId)
+                if room:
+                    _LOGGER.debug("State update for room %s: %s", room.name, item)
+                    room.handle_state(item)
+                else:
+                    _LOGGER.warning("Received state update for unknown room %s: %s", roomId, item)
 
             elif "compId" in item:
                 compId = item["compId"]
-                comp = self._comps[compId]
-                _LOGGER.debug("State update for component %s: %s", comp.name, item)
-                comp.handle_state(item)
+                comp = self._comps.get(compId)
+                if comp:
+                    _LOGGER.debug("State update for component %s: %s", comp.name, item)
+                    comp.handle_state(item)
+                else:
+                    _LOGGER.warning("Received state update for unknown component %s: %s", compId, item)
 
             else:
                 _LOGGER.warning("Unknown state info item (no deviceId, roomId, or compId): %s", item)
@@ -287,8 +297,9 @@ class Bridge:
             self.state = State.Ready
             self.on_initialized.set()
             _LOGGER.info("Bridge initialization complete - all data loaded")
-            _LOGGER.info("Loaded %d devices, %d components, %d rooms",
-                        len(self._devices), len(self._comps), len(self._rooms))
+            _LOGGER.info(
+                "Loaded %d devices, %d components, %d rooms", len(self._devices), len(self._comps), len(self._rooms)
+            )
 
         if "devices" in payload:
             _LOGGER.debug("Processing %d devices from SET_ALL_DATA", len(payload["devices"]))
@@ -342,8 +353,14 @@ class Bridge:
         home_scenes = payload.get("homeScenes", [])
         self.home_scenes_count = len(home_scenes)
 
-        _LOGGER.debug("Bridge info updated: id=%s, name=%s, type=%s, fw=%s, scenes=%s",
-                     self.bridge_id, self.bridge_name, self.bridge_type, self.fw_version, self.home_scenes_count)
+        _LOGGER.debug(
+            "Bridge info updated: id=%s, name=%s, type=%s, fw=%s, scenes=%s",
+            self.bridge_id,
+            self.bridge_name,
+            self.bridge_type,
+            self.fw_version,
+            self.home_scenes_count,
+        )
 
     def _handle_UNKNOWN(self, message_type, payload):
         """Handle unknown message types."""
