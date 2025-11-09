@@ -155,10 +155,16 @@ class Light(BridgeDevice):
         if not switch:
             return self.state.value.dimmvalue if self.state.value is not None else 99
 
-        return payload["dimmvalue"]
+        # Return dimmvalue if present, otherwise default to 99 (full brightness)
+        return payload.get("dimmvalue", 99)
 
     def handle_state(self, payload):
         """Handle light state updates."""
+        # Only process if this is a switch state update
+        if "switch" not in payload:
+            _LOGGER.debug("Light %s received non-switch payload, ignoring: %s", self.name, payload)
+            return
+        
         switch = payload["switch"]
         dimmvalue = self.interpret_dimmvalue_from_payload(switch, payload)
         _LOGGER.debug("Light %s state update: switch=%s, dimmvalue=%s", self.name, switch, dimmvalue)
