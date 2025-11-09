@@ -7,7 +7,7 @@ import aiohttp
 
 from .comp import Comp, CompState  # noqa: F401
 from .connection import SecureBridgeConnection, setup_secure_connection
-from .constants import ComponentTypes, DeviceTypes, FW_BUILDS, Messages
+from .constants import FW_BUILDS, ComponentTypes, DeviceTypes, Messages
 from .devices import (
     BridgeDevice,
     DoorSensor,
@@ -64,7 +64,7 @@ class Bridge:
         self.on_initialized = asyncio.Event()
         self.connection = None
         self.connection_subscription = None
-        
+
         # Bridge device information
         self.bridge_id = None
         self.bridge_name = None
@@ -326,22 +326,22 @@ class Bridge:
         """Handle home data updates."""
         # Store the full payload for reference
         self.home_data = payload
-        
+
         # Extract bridge-specific information
         self.bridge_id = payload.get("id")
         self.bridge_name = payload.get("name")
         self.bridge_type = payload.get("bridgeType")
-        
+
         # Map firmware build number to version string
         fw_build = payload.get("fwBuild")
         if fw_build is not None:
             self.fw_version = FW_BUILDS.get(fw_build, f"Unknown (build {fw_build})")
             _LOGGER.info("Bridge firmware: %s (build %s)", self.fw_version, fw_build)
-        
+
         # Extract home scenes count
         home_scenes = payload.get("homeScenes", [])
         self.home_scenes_count = len(home_scenes)
-        
+
         _LOGGER.debug("Bridge info updated: id=%s, name=%s, type=%s, fw=%s, scenes=%s",
                      self.bridge_id, self.bridge_name, self.bridge_type, self.fw_version, self.home_scenes_count)
 
