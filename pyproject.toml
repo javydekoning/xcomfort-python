@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xcomfort"
+version = "0.4.0"
+description = "Integration with Eaton xComfort Bridge"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Jan Kristian Bjerke", email = "jan.bjerke@gmail.com"},
+    {name = "Javy de Koning", email = "javydekoning@gmail.com"},
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "aiohttp",
+    "rx",
+    "pycryptodome",
+]
+
+[project.urls]
+Homepage = "https://github.com/javydekoning/xcomfort-python"
+Repository = "https://github.com/javydekoning/xcomfort-python"
+Issues = "https://github.com/javydekoning/xcomfort-python/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["xcomfort"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"

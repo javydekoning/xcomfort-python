@@ -1,6 +1,10 @@
+"""Constants module for xComfort integration."""
 from enum import IntEnum
 
-class Messages(IntEnum):    
+
+class Messages(IntEnum):
+    """Message types for xComfort communication."""
+
     NACK = 0
     ACK = 1
     HEARTBEAT = 2
@@ -98,3 +102,71 @@ class Messages(IntEnum):
     NACK_INFO_INVALID_ACTION = -98
     NACK_INFO_DEVICE_NOT_DIMMABLE = -99
     NACK_INFO_UNKNOWN_DEVICE = -100
+
+
+class ShadeOperationState(IntEnum):
+    """Shade operation states."""
+
+    OPEN = 0
+    CLOSE = 1
+    STOP = 2
+    STEP_DOWN = 3
+    STEP_UP = 4
+    GO_TO = 5
+    CALIBRATION = 10
+    LOCK = 11
+    UNLOCK = 12
+    QUIT = 13
+
+
+class DeviceTypes(IntEnum):
+    """Device types for xComfort devices."""
+
+    ACTUATOR_SWITCH = 100
+    ACTUATOR_DIMM = 101
+    SHADING_ACTUATOR = 102
+    SWITCH = 202
+    ROCKER = 220
+    TEMP_SENSOR = 410
+    HEATING_ACTUATOR = 440
+    HEATING_VALVE = 441
+    HEATING_WATER_VALVE = 442
+    RC_TOUCH = 450
+    TEMP_HUMIDITY_SENSOR = 451
+    WATER_GUARD = 497
+    WATER_SENSOR = 499
+
+
+class HeatingTypes(IntEnum):
+    """Heating types for xComfort devices."""
+
+    ELECTRIC_FLOOR_FOIL = 1
+    ELECTRIC_FLOOR_CABLE = 2
+    WATER_FLOOR = 3
+    ELECTRIC_RADIATOR = 4
+    ELECTRIC_INFRARED = 5
+    WATER_RADIATOR = 6
+
+
+class ComponentTypes(IntEnum):
+    """Component types for xComfort devices."""
+
+    PUSH_BUTTON_1 = 1
+    PUSH_BUTTON_2 = 2
+    MULTI_HEATING_ACTUATOR = 71
+    LIGHT_SWITCH_ACTUATOR = 74
+    DOOR_WINDOW_SENSOR = 76
+    DIMMING_ACTUATOR = 77
+    RC_TOUCH = 78
+    BRIDGE = 83
+    WATER_GUARD = 84
+    WATER_SENSOR = 85
+    SHADING_ACTUATOR = 86
+    MULTI_SENSOR_PUSH_BUTTON_1 = 87
+
+
+# Firmware build version mappings
+FW_BUILDS = {
+    66: "4.0.1",
+}
+

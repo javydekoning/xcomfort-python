@@ -5,4 +5,10 @@
         "-c",
         "./pytest.ini"
     ],
+    "ruff.enable": true,
+    "ruff.fixAll": true,
+    "ruff.lint.enable": true,
+    "ruff.format.args": [
+        "--line-length=120"
+    ]
 }

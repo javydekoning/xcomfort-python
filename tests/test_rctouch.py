@@ -1,9 +1,16 @@
-import pytest
-import json
-from xcomfort.devices import (RcTouch)
+"""Test module for RcTouch device."""
+from xcomfort.devices import RcTouch
+
 
 def test_rctouchstate():
-    payload = {"deviceId":17,"info":[{"text":"1222","type":2,"value":"20.9"},{"text":"1223","type":2,"icon":1,"value":"42.5"}]}
+    """Test RcTouch state handling."""
+    payload = {
+        "deviceId": 17,
+        "info": [
+            {"text": "1222", "type": 2, "value": "20.9"},
+            {"text": "1223", "type": 2, "icon": 1, "value": "42.5"},
+        ],
+    }
 
     device = RcTouch(None, 1, "", "1")
 
