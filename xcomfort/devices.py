@@ -164,7 +164,7 @@ class Light(BridgeDevice):
         if "switch" not in payload:
             _LOGGER.debug("Light %s received non-switch payload, ignoring: %s", self.name, payload)
             return
-        
+
         switch = payload["switch"]
         dimmvalue = self.interpret_dimmvalue_from_payload(switch, payload)
         _LOGGER.debug("Light %s state update: switch=%s, dimmvalue=%s", self.name, switch, dimmvalue)
