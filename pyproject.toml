@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xcomfort"
-version = "0.4.1"
+version = "0.4.2"
 description = "Integration with Eaton xComfort Bridge"
 readme = "README.md"
 license = {text = "MIT"}
