@@ -4,7 +4,7 @@ import logging
 
 import rx
 
-from .constants import Messages, ShadeOperationState
+from .constants import ComponentTypes, Messages, ShadeOperationState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -351,7 +351,11 @@ class Rocker(BridgeDevice):
 
         # Subscribe to component state updates if this is a multisensor
         comp = bridge._comps.get(comp_id)  # noqa: SLF001
-        if comp is not None and comp.comp_type == 87:
+        if comp is not None and comp.comp_type in (
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_1_CHANNEL,
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_2_CHANNEL,
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_4_CHANNEL,
+        ):
             comp.state.subscribe(lambda _: self._on_component_update())
             # Find and subscribe to companion sensor device
             self._find_and_subscribe_sensor_device()
@@ -371,8 +375,12 @@ class Rocker(BridgeDevice):
     def has_sensors(self) -> bool:
         """Check if this rocker has sensor capabilities."""
         comp = self.bridge._comps.get(self.comp_id)  # noqa: SLF001
-        # Component type 87 is MULTI_SENSOR_PUSH_BUTTON_1
-        return comp is not None and comp.comp_type == 87
+        # Check if component is any multi sensor push button type
+        return comp is not None and comp.comp_type in (
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_1_CHANNEL,
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_2_CHANNEL,
+            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_4_CHANNEL,
+        )
 
     def _find_and_subscribe_sensor_device(self) -> None:
         """Find companion sensor device and subscribe to its updates.
