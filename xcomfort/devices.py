@@ -199,6 +199,7 @@ class RcTouch(BridgeDevice):
 
     def handle_state(self, payload):
         """Handle RcTouch state updates."""
+        _LOGGER.debug("RcTouch %s: Received payload: %s", self.name, payload)
         temperature = None
         humidity = None
         if "info" in payload:
@@ -350,12 +351,8 @@ class Rocker(BridgeDevice):
             self.is_on = bool(payload["curstate"])
 
         # Subscribe to component state updates if this is a multisensor
-        comp = bridge._comps.get(comp_id)  # noqa: SLF001
-        if comp is not None and comp.comp_type in (
-            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_1_CHANNEL,
-            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_2_CHANNEL,
-            ComponentTypes.PUSH_BUTTON_MULTI_SENSOR_4_CHANNEL,
-        ):
+        if self.has_sensors:
+            comp = self.bridge._comps.get(self.comp_id)  # noqa: SLF001
             comp.state.subscribe(lambda _: self._on_component_update())
             # Find and subscribe to companion sensor device
             self._find_and_subscribe_sensor_device()
