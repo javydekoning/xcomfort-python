@@ -78,6 +78,7 @@ class Room:
 
     def handle_state(self, payload):
         """Handle room state updates."""
+        _LOGGER.debug("Room %s: Received payload: %s", self.name, payload)
         old_state = self.state.value
 
         if old_state is not None:
@@ -89,6 +90,7 @@ class Room:
         humidity = payload.get("humidity", None)
         power = payload.get("power", 0.0)
 
+        mode = None
         if "currentMode" in payload:  # When handling from _SET_ALL_DATA
             mode = RctMode(payload.get("currentMode", None))
         if "mode" in payload:  # When handling from _SET_STATE_INFO
@@ -101,6 +103,7 @@ class Room:
                 self.modesetpoints[RctMode(mode_data["mode"])] = float(mode_data["value"])
             _LOGGER.debug("Room %s: Loaded mode setpoints: %s", self.name, self.modesetpoints)
 
+        currentstate = None
         if "state" in payload:
             currentstate = RctState(payload.get("state", None))
 

@@ -16,6 +16,14 @@ uv pip install -e .
 
 ## Usage
 
+Easy mode:
+
+```sh
+uv run main.py --ip x.x.x.x --auth-key "ABCD1234WXYZ"
+```
+
+Roll your own;
+
 ```python
 import asyncio
 from xcomfort import Bridge
@@ -46,7 +54,6 @@ async def main():
     await runTask
 
 asyncio.run(main())
-
 ```
 
 ## Development
@@ -56,24 +63,17 @@ asyncio.run(main())
 You can run the tests using uvx without any local dependency management:
 
 ```bash
-# Run tests with uvx (no local installation needed)
-uvx --with aiohttp --with rx --with pycryptodome --with pytest-asyncio pytest tests/ -v
-
-# Or use the convenience script
 ./run_tests.sh
-
-# Or install dev dependencies and run tests locally
-uv pip install -e ".[dev]"
-pytest
 ```
+
+To run Github workflows locally
+
+Install [act](https://nektosact.com/installation/index.html) and run flows locally using `act`. 
 
 ### Dependencies
 
 The project includes the following dependencies:
+
 - `aiohttp` - For async HTTP client functionality
 - `rx` - For reactive programming
 - `pycryptodome` - For cryptographic operations
-
-## To run Github workflows locally
-
-Install [act](https://nektosact.com/installation/index.html) and run flows locally using `act`. 

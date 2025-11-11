@@ -131,3 +131,5 @@ dmypy.json
 test.py
 
 .github/linters/pyproject.toml
+
+uv.lock
